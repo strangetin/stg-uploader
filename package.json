@@ -1,0 +1,21 @@
+{
+  "private": false,
+  "name": "stg-uploader",
+  "version": "1.0.0",
+  "description": "Vue Uploader plugin for FS CRM",
+  "main": "./dist/index.js",
+  "scripts": {
+    "dev": "vue serve ./src/Uploader.vue",
+    "build": "npx bili --bundle-node-modules"
+  },
+  "files": [
+    "dist/*"
+  ],
+  "author": "Strange Tin",
+  "license": "MIT",
+  "devDependencies": {
+    "bili": "^4.9.1",
+    "rollup-plugin-vue": "^5.1.6",
+    "vue-template-compiler": "^2.6.11"
+  }
+}
