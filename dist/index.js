@@ -1,5 +1,5 @@
 /*!
- * stg-uploader v1.0.0
+ * stg-uploader v1.0.2
  * (c) Strange Tin
  * Released under the MIT License.
  */
@@ -68,10 +68,12 @@ var script = {
       type: Array[String]
     },
     image: {
-      type: String
+      type: String,
+      required: false
     },
     video: {
-      type: String
+      type: String,
+      required: false
     }
   },
   mounted: function mounted() {
@@ -99,33 +101,7 @@ var script = {
       return this.containerClass || null;
     }
   },
-  methods: function methods() {},
-  watch: {
-    images: {
-      handler: function handler(value) {
-        if (this.type === 'images' && value && typeof this.data === 'undefined') {
-          console.error("Property 'images' required if you select type 'images'");
-        }
-      },
-      immediate: true
-    },
-    image: {
-      handler: function handler(value) {
-        if (this.type === 'image' && value && typeof this.data === 'undefined') {
-          console.error("Property 'image' required if you select type 'image'");
-        }
-      },
-      immediate: true
-    },
-    video: {
-      handler: function handler(value) {
-        if (this.type === 'video' && value && typeof this.data === 'undefined') {
-          console.error("Property 'video' required if you select type 'video'");
-        }
-      },
-      immediate: true
-    }
-  }
+  methods: {}
 };
 
 function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier /* server only */, shadowMode, createInjector, createInjectorSSR, createInjectorShadow) {
@@ -287,7 +263,7 @@ var __vue_staticRenderFns__ = [];
 
 var __vue_inject_styles__ = function __vue_inject_styles__(inject) {
   if (!inject) return;
-  inject("data-v-627d4b32_0", {
+  inject("data-v-53fe220b_0", {
     source: ".stg-uploader{width:100%}.stg-uploader .drop-area{width:100%;min-height:100px;background:gray}",
     map: undefined,
     media: undefined
