@@ -1,7 +1,7 @@
 <template>
     <stg-uploader
             :settings="settings"
-            type="image"/>
+            type="video"/>
 </template>
 
 <script>

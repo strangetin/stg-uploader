@@ -14,11 +14,28 @@
         <div v-if="type === 'images'">
             <div @click="openUploadFileDialog('images')" class="drop-area" ref="dropAreaImages">
                 <input @change="handleUploadMultipleFiles()" multiple ref="dropAreaImagesInput" type="file">
+                <div class="uploaded-files">
+                    <div :key="`preview-${index}`" class="image-preview" v-for="(image, index) in storedImages">
+                        <div class="img-container">
+                            <img :src="image.path">
+                        </div>
+                        <div :title="image.name" class="img-name">{{image.name}}</div>
+                    </div>
+                </div>
             </div>
         </div>
         <div v-if="type === 'video'">
             <div @click="openUploadFileDialog('video')" class="drop-area" ref="dropAreaVideo">
                 <input @change="handleUploadFile('video')" ref="dropAreaVideoInput" type="file">
+                <div class="image-preview" v-if="storedVideo">
+                    <div class="img-container">
+                        <div class="img-container video" v-if="!videoUploaded"></div>
+                        <div class="img-container" v-if="videoUploaded">
+                            <video :src="storedVideo" v-if="videoUploaded"></video>
+                        </div>
+                    </div>
+                    <div class="img-name" v-if="showImageName('image')">{{}}</div>
+                </div>
             </div>
         </div>
 
@@ -83,11 +100,15 @@
         },
         mounted() {
             if (this.type === 'image') {
-                this.storedImage = this.image
+                if (this.image) {
+                    this.storedImage = this.image
+                }
                 this.dropArea = this.$refs.dropAreaImage
             }
             if (this.type === 'images') {
-                this.storedImages = [...this.storedImages, ...this.images]
+                if (Array.isArray(this.images) && this.images.length > 0) {
+                    this.storedImages = [...this.storedImages, ...this.images]
+                }
                 this.dropArea = this.$refs.dropAreaImages
             }
             if (this.type === 'video') {
@@ -117,7 +138,32 @@
             storedImages: [],
             storedImage: null,
             storedVideo: null,
-            dropArea: null
+            dropArea: null,
+            videoUploaded: false,
+            availableImagesMime: [
+                'image/apng',
+                'image/bmp',
+                'image/gif',
+                'image/x-icon',
+                'image/jpeg',
+                'image/png',
+                'image/svg+xml',
+                'image/tiff',
+                'image/webp',
+                'image/pjpeg',
+            ],
+            availableVideosMime: [
+                'video/mpeg',
+                'video/mp4',
+                'video/ogg',
+                'video/quicktime',
+                'video/webm',
+                'video/x-ms-wmv',
+                'video/x-flv',
+                'video/3gpp',
+                'video/3gpp2',
+            ],
+            videoIcon: null
         }),
         computed: {
             computedContainerClass() {
@@ -160,7 +206,10 @@
                 }
             },
             handleUploadMultipleFiles() {
-                console.log('images', this.$refs.dropAreaImagesInput.fileList)
+                for (let file of this.$refs.dropAreaImagesInput.files) {
+                    this.makePreview(file)
+                    this.uploadFile(file)
+                }
             },
             handleUploadFile(type) {
                 switch (type) {
@@ -168,20 +217,47 @@
                         this.handleSingleImage(this.$refs.dropAreaImageInput.files)
                         break;
                     case 'video':
-                        console.log('video', this.$refs.dropAreaVideoInput.files)
+                        this.handleSingleVideo(this.$refs.dropAreaVideoInput.files)
                         break;
                     default:
                         break;
                 }
             },
+            makePreview(file) {
+                let reader = new FileReader()
+                reader.readAsDataURL(file)
+                reader.onloadend = () => {
+                    this.storedImages.push({
+                        path: reader.result,
+                        uploaded: false,
+                        name: file.name
+                    })
+                }
+            },
             handleSingleImage(files) {
                 if (files[0]) {
-                    let reader = new FileReader()
-                    reader.readAsDataURL(files[0])
-                    reader.onloadend = () => {
-                        this.storedImage = reader.result
+                    let file = files[0];
+                    if (this.availableImagesMime.indexOf(file.type) !== -1) {
+                        let reader = new FileReader()
+                        reader.readAsDataURL(file)
+                        reader.onloadend = () => {
+                            this.storedImage = reader.result
+                        }
+                        this.uploadFile(file, 'image');
+                    } else {
+                        this.$emit('typeError', `Неверный вормат файла изображения. Допустимые форматы (${this.availableImagesMime.join(', ')})`)
                     }
-                    this.uploadFile(files[0]);
+                }
+            },
+            handleSingleVideo(files) {
+                if (files[0]) {
+                    let file = files[0];
+                    if (this.availableVideosMime.indexOf(file.type) !== -1) {
+                        this.storedVideo = 'processing'
+                        this.uploadFile(files[0], 'video');
+                    } else {
+                        this.$emit('typeError', `Неверный формат файла видео. Допустимые форматы (${this.availableVideosMime.join(', ')})`)
+                    }
                 }
             },
             showImageName(type) {
@@ -212,20 +288,21 @@
                         return false
                 }
             },
-            uploadFile(file) {
-                let url = this.settings.uploadURL
-                let xhr = new XMLHttpRequest()
-                let formData = new FormData()
-                xhr.open('POST', url, true)
-                xhr.addEventListener('readystatechange', function (event) {
-                    if (xhr.readyState === 4 && xhr.status === 200) {
-                        console.log(event)
-                    } else if (xhr.readyState === 4 && xhr.status !== 200) {
-                        console.log(event)
-                    }
-                })
-                formData.append('file', file)
-                xhr.send(formData)
+            uploadFile(file, type = null) {
+                console.log(file, type)
+                // let url = this.settings.uploadURL
+                // let xhr = new XMLHttpRequest()
+                // let formData = new FormData()
+                // xhr.open('POST', url, true)
+                // xhr.addEventListener('readystatechange', function (event) {
+                //     if (xhr.readyState === 4 && xhr.status === 200) {
+                //         console.log(event)
+                //     } else if (xhr.readyState === 4 && xhr.status !== 200) {
+                //         console.log(event)
+                //     }
+                // })
+                // formData.append('file', file)
+                // xhr.send(formData)
             }
         }
     }
@@ -264,11 +341,33 @@
         height: 150px;
         overflow: hidden;
         border-radius: 15px;
+        margin-right: 30px;
+        position: relative;
+    }
+
+    .stg-uploader .drop-area .image-preview:last-of-type {
+        margin-right: 0;
     }
 
     .stg-uploader .drop-area .image-preview .img-container {
         width: 100%;
         height: 100%;
+    }
+
+    .stg-uploader .drop-area .image-preview .img-name {
+        position: absolute;
+        max-width: 80%;
+        left: 10%;
+        bottom: 10px;
+        background: #000;
+        color: #ffffff;
+        white-space: nowrap;
+        overflow: hidden;
+        padding: 3px 10px 3px 10px;
+        box-sizing: border-box;
+        text-overflow: ellipsis;
+        border-radius: 10px;
+        text-align: center;
     }
 
     .stg-uploader .drop-area .image-preview .img-container img {
@@ -278,8 +377,19 @@
         object-position: center center;
     }
 
+    .stg-uploader .drop-area .image-preview .img-container.video {
+        background: url("assets/images/video-player.svg") no-repeat center center;
+        background-size: contain;
+    }
+
     .stg-uploader .uploader-action-text {
         text-align: center;
         color: #000000;
+    }
+
+    .stg-uploader .uploaded-files {
+        width: 100%;
+        height: 100%;
+        display: flex;
     }
 </style>

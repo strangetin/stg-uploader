@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "stg-uploader",
-  "version": "1.0.2",
+  "version": "1.1.4",
   "description": "Vue Uploader plugin for FS CRM",
   "main": "./dist/index.js",
   "scripts": {
