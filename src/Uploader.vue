@@ -3,39 +3,51 @@
         <div v-if="type === 'image'">
             <div @click="openUploadFileDialog('image')" class="drop-area" ref="dropAreaImage">
                 <input @change="handleUploadFile('image')" ref="dropAreaImageInput" type="file">
-                <div class="image-preview" v-if="storedImage">
-                    <div class="img-container">
-                        <img :src="storedImage" v-if="isPathExist('image')">
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="preview loading" v-if="imageUploading">
+                            <loader/>
+                        </div>
+                        <div class="preview" v-if="showSingleImagePreview">
+                            <img :alt="storedImageName" :src="storedImagePath">
+                        </div>
+                        <div class="file-name" v-if="imageUploading">Wait...</div>
+                        <div class="file-name" v-if="showSingleImagePreview">Wait...</div>
                     </div>
-                    <div class="img-name" v-if="showImageName('image')">{{}}</div>
                 </div>
+                <!--                <div class="image-preview" v-if="storedImage">-->
+                <!--                    <div class="img-container">-->
+                <!--                        <img :src="storedImage" v-if="isPathExist('image')">-->
+                <!--                    </div>-->
+                <!--                    <div class="img-name" v-if="showImageName('image')">{{image.name}}</div>-->
+                <!--                </div>-->
             </div>
         </div>
         <div v-if="type === 'images'">
             <div @click="openUploadFileDialog('images')" class="drop-area" ref="dropAreaImages">
                 <input @change="handleUploadMultipleFiles()" multiple ref="dropAreaImagesInput" type="file">
-                <div class="uploaded-files">
-                    <div :key="`preview-${index}`" class="image-preview" v-for="(image, index) in storedImages">
-                        <div class="img-container">
-                            <img :src="image.path">
-                        </div>
-                        <div :title="image.name" class="img-name">{{image.name}}</div>
-                    </div>
-                </div>
+                <!--                <div class="uploaded-files">-->
+                <!--                    <div :key="`preview-${index}`" class="image-preview" v-for="(image, index) in storedImages">-->
+                <!--                        <div class="img-container">-->
+                <!--                            <img :src="image.path">-->
+                <!--                        </div>-->
+                <!--                        <div :title="image.name" class="img-name">{{image.name}}</div>-->
+                <!--                    </div>-->
+                <!--                </div>-->
             </div>
         </div>
         <div v-if="type === 'video'">
             <div @click="openUploadFileDialog('video')" class="drop-area" ref="dropAreaVideo">
                 <input @change="handleUploadFile('video')" ref="dropAreaVideoInput" type="file">
-                <div class="image-preview" v-if="storedVideo">
-                    <div class="img-container">
-                        <div class="img-container video" v-if="!videoUploaded"></div>
-                        <div class="img-container" v-if="videoUploaded">
-                            <video :src="storedVideo" v-if="videoUploaded"></video>
-                        </div>
-                    </div>
-                    <div class="img-name" v-if="showImageName('image')">{{}}</div>
-                </div>
+                <!--                <div class="image-preview" v-if="storedVideo">-->
+                <!--                    <div class="img-container">-->
+                <!--                        <div class="img-container video" v-if="!videoUploaded"></div>-->
+                <!--                        <div class="img-container" v-if="videoUploaded">-->
+                <!--                            <video :src="storedVideo" v-if="videoUploaded"></video>-->
+                <!--                        </div>-->
+                <!--                    </div>-->
+                <!--                    <div class="img-name" v-if="showImageName('image')">{{}}</div>-->
+                <!--                </div>-->
             </div>
         </div>
 
@@ -44,6 +56,10 @@
 </template>
 
 <script>
+
+    import Loader from './components/Loader'
+    import axios from 'axios'
+
     export default {
         props: {
             settings: {
@@ -98,10 +114,13 @@
                 required: false
             }
         },
+        components: {
+            loader: Loader
+        },
         mounted() {
             if (this.type === 'image') {
                 if (this.image) {
-                    this.storedImage = this.image
+                    this.storedImagePath = this.image
                 }
                 this.dropArea = this.$refs.dropAreaImage
             }
@@ -136,7 +155,10 @@
         },
         data: () => ({
             storedImages: [],
-            storedImage: null,
+            storedImagePath: null,
+            storedImageFile: null,
+            storedImageName: null,
+            imageUploading: false,
             storedVideo: null,
             dropArea: null,
             videoUploaded: false,
@@ -166,6 +188,9 @@
             videoIcon: null
         }),
         computed: {
+            showSingleImagePreview() {
+                return !this.imageUploading && this.storedImageName && this.storedImagePath
+            },
             computedContainerClass() {
                 return this.containerClass || null
             },
@@ -214,7 +239,7 @@
             handleUploadFile(type) {
                 switch (type) {
                     case 'image':
-                        this.handleSingleImage(this.$refs.dropAreaImageInput.files)
+                        this.handleSingleImage()
                         break;
                     case 'video':
                         this.handleSingleVideo(this.$refs.dropAreaVideoInput.files)
@@ -234,15 +259,12 @@
                     })
                 }
             },
-            handleSingleImage(files) {
+            handleSingleImage() {
+                let files = this.$refs.dropAreaImageInput.files;
                 if (files[0]) {
                     let file = files[0];
                     if (this.availableImagesMime.indexOf(file.type) !== -1) {
-                        let reader = new FileReader()
-                        reader.readAsDataURL(file)
-                        reader.onloadend = () => {
-                            this.storedImage = reader.result
-                        }
+                        this.imageUploading = true
                         this.uploadFile(file, 'image');
                     } else {
                         this.$emit('typeError', `Неверный вормат файла изображения. Допустимые форматы (${this.availableImagesMime.join(', ')})`)
@@ -265,7 +287,7 @@
                 let nameIsAvailable = false
                 switch (type) {
                     case 'image':
-                        nameIsAvailable = !!this.storedImage
+                        nameIsAvailable = !!this.storedImagePath
                         break;
                     case 'images':
                         nameIsAvailable = this.storedImages.length > 0
@@ -281,28 +303,34 @@
             isPathExist(type) {
                 switch (type) {
                     case 'image':
-                        return !!this.storedImage
+                        return !!this.storedImagePath
                     case 'video':
                         return !!this.storedVideo
                     default:
                         return false
                 }
             },
-            uploadFile(file, type = null) {
-                console.log(file, type)
-                // let url = this.settings.uploadURL
-                // let xhr = new XMLHttpRequest()
-                // let formData = new FormData()
-                // xhr.open('POST', url, true)
-                // xhr.addEventListener('readystatechange', function (event) {
-                //     if (xhr.readyState === 4 && xhr.status === 200) {
-                //         console.log(event)
-                //     } else if (xhr.readyState === 4 && xhr.status !== 200) {
-                //         console.log(event)
-                //     }
-                // })
-                // formData.append('file', file)
-                // xhr.send(formData)
+            uploadFile(file, type) {
+                let ctx = this;
+                this.storedImageName = null
+                this.storedImagePath = null
+                let url = this.settings.uploadURL
+                let formData = new FormData()
+                formData.append('file', file)
+                axios.post(url,
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    }
+                ).then(function () {
+                    console.log('SUCCESS!!');
+                }).catch(function () {
+                    if (type === 'image') {
+                        ctx.imageUploading = false
+                    }
+                });
             }
         }
     }
@@ -312,12 +340,19 @@
 <style>
     .stg-uploader {
         width: 100%;
-        border-radius: 10px;
-        background: rgba(0, 0, 0, 0.2);
+        border-radius: 5px;
+        border: 2px dotted #e5e5e5;
+        transition: .2s linear;
+        color: #777;
         padding: 15px;
         display: flex;
         flex-direction: column;
         box-sizing: border-box;
+        background-color: #FFffff;
+    }
+
+    .stg-uploader:hover {
+        background-color: #f6f6f6;
     }
 
     .stg-uploader .drop-area {
@@ -325,49 +360,9 @@
         min-height: 150px;
     }
 
-    .stg-uploader .drop-area.highlight {
-
-    }
-
     .stg-uploader .drop-area input {
         visibility: hidden;
         display: none;
-    }
-
-    .stg-uploader .drop-area .image-preview {
-        display: flex;
-        flex-direction: column;
-        width: 150px;
-        height: 150px;
-        overflow: hidden;
-        border-radius: 15px;
-        margin-right: 30px;
-        position: relative;
-    }
-
-    .stg-uploader .drop-area .image-preview:last-of-type {
-        margin-right: 0;
-    }
-
-    .stg-uploader .drop-area .image-preview .img-container {
-        width: 100%;
-        height: 100%;
-    }
-
-    .stg-uploader .drop-area .image-preview .img-name {
-        position: absolute;
-        max-width: 80%;
-        left: 10%;
-        bottom: 10px;
-        background: #000;
-        color: #ffffff;
-        white-space: nowrap;
-        overflow: hidden;
-        padding: 3px 10px 3px 10px;
-        box-sizing: border-box;
-        text-overflow: ellipsis;
-        border-radius: 10px;
-        text-align: center;
     }
 
     .stg-uploader .drop-area .image-preview .img-container img {
@@ -377,19 +372,52 @@
         object-position: center center;
     }
 
-    .stg-uploader .drop-area .image-preview .img-container.video {
-        background: url("assets/images/video-player.svg") no-repeat center center;
-        background-size: contain;
-    }
-
     .stg-uploader .uploader-action-text {
         text-align: center;
         color: #000000;
     }
 
-    .stg-uploader .uploaded-files {
-        width: 100%;
-        height: 100%;
+    .stg-uploader .drop-area .file-list {
         display: flex;
+        height: 180px;
+        width: 100%;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    .stg-uploader .drop-area .file-list .file-item {
+        width: 150px;
+        height: 100%;
+        margin-right: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .stg-uploader .drop-area .file-list .file-item:last-of-type {
+        margin-right: 0;
+    }
+
+    .stg-uploader .drop-area .file-list .file-item .preview {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 5px;
+    }
+
+    .stg-uploader .drop-area .file-list .file-item .preview.loading {
+        height: 150px;
+        width: 100%;
+        display: flex;
+    }
+
+    .stg-uploader .drop-area .file-list .file-item .file-name {
+        height: 20px;
+        width: 100%;
+        text-align: center;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 100%;
+        overflow: hidden;
+        padding: 0 7px;
     }
 </style>

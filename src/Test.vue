@@ -1,7 +1,20 @@
 <template>
-    <stg-uploader
-            :settings="settings"
-            type="video"/>
+    <div>
+        <stg-uploader
+                :settings="settings"
+                action-text="Upload single video"
+                type="video"/>
+        <div class="spacer"></div>
+        <stg-uploader
+                :settings="settings"
+                action-text="Upload single image"
+                type="image"/>
+        <div class="spacer"></div>
+        <stg-uploader
+                :settings="settings"
+                action-text="Upload multiple images"
+                type="images"/>
+    </div>
 </template>
 
 <script>
@@ -13,10 +26,16 @@
         },
         data: () => ({
             settings: {
-                uploadURL: '123',
+                uploadURL: 'https://netcar1.tech-dev.space/api/socket-test/files',
                 headers: [],
                 actionText: 'Drag your files'
             }
         })
     }
 </script>
+
+<style>
+    .spacer {
+        height: 30px;
+    }
+</style>
