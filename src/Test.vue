@@ -13,7 +13,6 @@
         <stg-uploader
                 :settings="settings"
                 action-text="Upload multiple images"
-                :images="images"
                 type="images"/>
     </div>
 </template>
