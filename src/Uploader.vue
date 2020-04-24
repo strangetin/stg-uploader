@@ -6,7 +6,9 @@
                 <div class="file-list">
                     <div class="file-item">
                         <div class="preview loading" v-if="imageUploading">
-                            <loader/>
+                            <span class="loader">
+                                <span class="loader-inner"></span>
+                            </span>
                         </div>
                         <div class="preview" v-if="showSingleImagePreview">
                             <img :alt="storedImageName" :src="storedImagePath">
@@ -57,7 +59,6 @@
 
 <script>
 
-    import Loader from './components/Loader'
     import axios from 'axios'
 
     export default {
@@ -113,9 +114,6 @@
                 type: String,
                 required: false
             }
-        },
-        components: {
-            loader: Loader
         },
         mounted() {
             if (this.type === 'image') {
@@ -408,6 +406,68 @@
         height: 150px;
         width: 100%;
         display: flex;
+    }
+
+    .stg-uploader .drop-area .file-list .file-item .preview.loading .loader {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        position: relative;
+        border: 4px solid #Fff;
+        animation: loader 2s infinite ease;
+        margin: auto;
+    }
+
+    .stg-uploader .drop-area .file-list .file-item .preview.loading .loader-inner {
+        vertical-align: top;
+        display: inline-block;
+        width: 100%;
+        background-color: #fff;
+        animation: loader-inner 2s infinite ease-in;
+    }
+
+    @keyframes loader {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        25% {
+            transform: rotate(180deg);
+        }
+
+        50% {
+            transform: rotate(180deg);
+        }
+
+        75% {
+            transform: rotate(360deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes loader-inner {
+        0% {
+            height: 0;
+        }
+
+        25% {
+            height: 0;
+        }
+
+        50% {
+            height: 100%;
+        }
+
+        75% {
+            height: 100%;
+        }
+
+        100% {
+            height: 0;
+        }
     }
 
     .stg-uploader .drop-area .file-list .file-item .file-name {
