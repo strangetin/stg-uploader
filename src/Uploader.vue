@@ -425,7 +425,6 @@
                 this.storedVideoName = fileName
                 this.videoUploading = false
                 this.$emit('uploadSuccess', path)
-                this.$emit('uploadSuccess', path)
             },
             resetSingleVideo(error = null) {
                 if (error) {
