@@ -13,6 +13,7 @@
         <stg-uploader
                 :settings="settings"
                 action-text="Upload multiple images"
+                :images="images"
                 type="images"/>
     </div>
 </template>
@@ -26,12 +27,15 @@
         },
         data: () => ({
             settings: {
-                uploadURL: 'https://netcar1.tech-dev.space/api/socket-test/files',
+                uploadURL: 'http://needcar.test/socket-test',
                 headers: {
-                    'Authorization': `Bearer YOUR TOKEN`
+                    Accept: 'application/json'
                 },
                 actionText: 'Drag your files'
-            }
+            },
+            images: [
+                'https://sun9-45.userapi.com/c854328/v854328292/1e023e/CQHwAwfoILA.jpg'
+            ]
         })
     }
 </script>
