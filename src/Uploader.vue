@@ -115,6 +115,7 @@
                 required: false
             }
         },
+
         mounted() {
             if (this.type === 'image') {
                 if (this.image) {
@@ -315,15 +316,18 @@
                 let url = this.settings.uploadURL
                 let formData = new FormData()
                 formData.append('file', file)
+                let headers = {
+                    'Content-Type': 'multipart/form-data'
+                };
+                headers = {...headers, ...this.headers}
                 axios.post(url,
                     formData,
                     {
-                        headers: {
-                            'Content-Type': 'multipart/form-data'
-                        }
+                        headers: headers
                     }
-                ).then(function () {
-                    console.log('SUCCESS!!');
+                ).then(function (data) {
+                    ctx.imageUploading = false
+                    console.log(data);
                 }).catch(function () {
                     if (type === 'image') {
                         ctx.imageUploading = false

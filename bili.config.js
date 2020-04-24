@@ -1,5 +1,5 @@
 module.exports = {
-    banner: true,
+    banner: false,
     output: {
         extractCSS: false,
     },

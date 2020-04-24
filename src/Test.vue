@@ -27,7 +27,9 @@
         data: () => ({
             settings: {
                 uploadURL: 'https://netcar1.tech-dev.space/api/socket-test/files',
-                headers: [],
+                headers: {
+                    'Authorization': `Bearer YOUR TOKEN`
+                },
                 actionText: 'Drag your files'
             }
         })
